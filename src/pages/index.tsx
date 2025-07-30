@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import LandingPage from '../components/LandingPage';
 import ChoiceInput from '../components/ChoiceInput';
 import Spinner from '../components/Spinner';
 import ResultDisplay from '../components/ResultDisplay';
+import Dashboard from '../components/Dashboard';
+import Sidebar from '../components/Sidebar';
+import MyAccount from '../components/MyAccount';
+import Login from '../components/Login';
+import Register from '../components/Register';
+import { saveDecision } from '../utils/analytics';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Choice {
   id: string;
@@ -16,6 +24,15 @@ export default function Home() {
   const [result, setResult] = useState<Choice | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showMyAccount, setShowMyAccount] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [decisionStartTime, setDecisionStartTime] = useState<number>(0);
+  const [hasSeenLanding, setHasSeenLanding] = useState(false);
+
+  const { isAuthenticated, isLoading } = useAuth();
 
   const addChoice = (text: string) => {
     if (text.trim()) {
@@ -32,7 +49,7 @@ export default function Home() {
     setChoices(choices.filter(choice => choice.id !== id));
   };
 
-    const startDecision = () => {
+      const startDecision = () => {
     if (choices.length < 2) {
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
@@ -42,6 +59,7 @@ export default function Home() {
     setIsSpinning(true);
     setShowResult(false);
     setShowError(false);
+    setDecisionStartTime(Date.now());
 
     // Simulate spinning animation
     setTimeout(() => {
@@ -49,6 +67,10 @@ export default function Home() {
       setResult(randomChoice);
       setIsSpinning(false);
       setShowResult(true);
+
+      // Save analytics
+      const decisionTime = Date.now() - decisionStartTime;
+      saveDecision(choices, randomChoice, decisionTime);
     }, 3000);
   };
 
@@ -57,6 +79,25 @@ export default function Home() {
     setResult(null);
     setShowResult(false);
   };
+
+    // Show landing page if user hasn't seen it yet and is not authenticated
+  if (!hasSeenLanding && !isAuthenticated && !isLoading) {
+    return (
+      <>
+        <Head>
+          <title>CHAIS PAS - Welcome</title>
+          <meta name="description" content="Let fate decide for you!" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <meta name="theme-color" content="#1e1b4b" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+
+        <LandingPage onContinueWithoutAccount={() => setHasSeenLanding(true)} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -90,9 +131,28 @@ export default function Home() {
         <div className="relative z-10 container mx-auto px-4 py-4 sm:py-8">
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-4xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-4 animate-pulse">
-              IDK BRO
-            </h1>
+            {/* Top Bar with Menu Button */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setShowSidebar(true)}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold p-3 rounded-xl hover:from-purple-400 hover:to-blue-400 transform hover:scale-105 transition-all duration-300 shadow-lg"
+              >
+                ☰
+              </button>
+              <div className="flex-1"></div>
+              <button
+                onClick={() => setShowDashboard(true)}
+                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold p-3 rounded-xl hover:from-purple-400 hover:to-blue-400 transform hover:scale-105 transition-all duration-300 shadow-lg"
+              >
+                📊
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <h1 className="text-4xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 animate-pulse">
+                IDK BRO
+              </h1>
+            </div>
             <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 px-4">
               Can&apos;t make a decision? Let a random dumbass program do the work for you!
             </p>
@@ -204,6 +264,46 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+            {/* Sidebar */}
+      <Sidebar
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+        onShowDashboard={() => setShowDashboard(true)}
+        onShowAuth={() => {
+          setAuthMode('login');
+          setShowAuth(true);
+        }}
+        onShowMyAccount={() => setShowMyAccount(true)}
+      />
+
+      {/* Dashboard Modal */}
+      <Dashboard isOpen={showDashboard} onClose={() => setShowDashboard(false)} />
+
+      {/* MyAccount Modal */}
+      <MyAccount isOpen={showMyAccount} onClose={() => setShowMyAccount(false)} />
+
+      {/* Auth Modals */}
+      {showAuth && authMode === 'login' && (
+        <Login
+          onSwitchToRegister={() => setAuthMode('register')}
+          onClose={() => setShowAuth(false)}
+        />
+      )}
+      {showAuth && authMode === 'register' && (
+        <Register
+          onSwitchToLogin={() => setAuthMode('login')}
+          onClose={() => setShowAuth(false)}
+        />
+      )}
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => setShowSidebar(true)}
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold p-4 rounded-full shadow-2xl hover:from-purple-400 hover:to-blue-400 transform hover:scale-110 transition-all duration-300 sm:hidden"
+      >
+        ☰
+      </button>
     </>
   );
 }
