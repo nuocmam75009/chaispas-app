@@ -132,19 +132,12 @@ export default function Home() {
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
             {/* Top Bar with Menu Button */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-start mb-6">
               <button
                 onClick={() => setShowSidebar(true)}
                 className="bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold p-3 rounded-xl hover:from-purple-400 hover:to-blue-400 transform hover:scale-105 transition-all duration-300 shadow-lg"
               >
                 ☰
-              </button>
-              <div className="flex-1"></div>
-              <button
-                onClick={() => setShowDashboard(true)}
-                className="bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold p-3 rounded-xl hover:from-purple-400 hover:to-blue-400 transform hover:scale-105 transition-all duration-300 shadow-lg"
-              >
-                📊
               </button>
             </div>
 
