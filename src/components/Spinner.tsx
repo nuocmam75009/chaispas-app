@@ -33,7 +33,7 @@ export default function Spinner() {
               DECIDING...
             </h3>
             <p className="text-gray-300 text-base sm:text-lg">
-              Let fate choose for you
+              ^^
             </p>
           </div>
 
