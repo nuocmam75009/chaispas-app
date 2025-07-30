@@ -94,7 +94,7 @@ export default function Home() {
               IDK BRO
             </h1>
             <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 px-4">
-              Can't make a decision? Let a random dumbass program do the work for you!
+              Can&apos;t make a decision? Let a random dumbass program do the work for you!
             </p>
           </div>
 
